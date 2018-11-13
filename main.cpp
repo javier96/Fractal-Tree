@@ -4,6 +4,7 @@
 #include <math.h>
 #include <time.h>
 #include <iostream>
+#include <string.h>
 using namespace std;
 #include <GL/glut.h>
 const double PI = acos(-1);
@@ -12,94 +13,103 @@ GLuint makeaTree;
 float x,y,z;
 
 /*
+Fuzzy Weed
 Axiom	X
 F -->	FF
 X -->	F-[[X]+X]+F[+FX]-X
 ø = 22.5
+Limit  = 7
+base = 0.35
 
-Axiom	F+F+F+F
-F -->	FF+F-F+F+FF
-ø =	90
-
-Axiom	F
+Wavy Seaweed
+Axiom =	F
 F -->	FF+[+F-F-F]-[-F+F+F]
 ø =	22.5
+Limit = 5
+base = 0.2
 
+Arrow weed
+Axiom = X
+F --> FF
+X --> F[+X][-X]FX
+ø =	30
+base = 0.35
 */
 
-///variables de L-System
-string axiom = "F", nxt;
+///L-System variables
+string axiom = "F++F++F";
+string nxt;
 int generation_count = 0;
-float len = 2, base = 0.2;
-float angle = 22.5;
-string rule = "FF+[+F-F-F]-[-F+F+F]";
-string rule2 = "F-[[X]+X]+F[+FX]-X";
+float len = 2, base = 0.20; //generation 0 values
+float angle = 60;
+string rule1 = "F-F++F-F"; //F -> rule1
+string rule2 = "F-[[X]+X]+F[+FX]-X"; // X -> rule2
+float yRotation = 0;
 
+void nextGen(){
+    nxt = "";
+
+    for(char c : axiom){
+        if(c == 'F'){       ///rule 1
+            nxt += rule1;
+        }else if(c == 'X'){ ///rule 2
+            nxt += rule2;
+        }else{
+            nxt += c;
+        }
+    }
+
+    ///decrease branch attributes
+    len = len*.67; base -= base*0.3;
+    axiom = nxt;
+    cout << "generation " << ++generation_count << ": "<< axiom.length() << " in length"<<endl;
+    if(generation_count < 3) cout << axiom << endl;
+}
+
+///draws branch
 void makeCylinder(float height, float base){
     GLUquadric *obj = gluNewQuadric();
-    //gluQuadricDrawStyle(obj, GLU_LINE);
-    glColor3f(0.64f, 0.16, 0.16f);
+    //glColor3f(0.64f, 0.16, 0.16f); //cafe
+    glColor3f(0.64f, 1.16, 0.16f); //verde
+    //glColor3f(1.0f, 1.0f, 1.0f); //blanco
+
     glPushMatrix();
         glRotatef(-90, 1.0,0.0,0.0);
         gluCylinder(obj, base,base-(0.2*base), height, 20,20);
     glPopMatrix();
+
     glutSwapBuffers();
 }
 
 void makeTree(float len, float base){ //height = len, base = thickness
 
-    //float angle;
-    //makeCylinder(height, base); glTranslatef(0.0, height, 0.0);
-    //height -= height*.2; base-= base*0.3;
-    /*
-    for(int a= 0; a<3; a++){
-        angle = rand()%50+20;
-        if(angle >48){
-            angle = -(rand()%50+20);
-        }
-
-        if (height > 1){
-            glPushMatrix();
-                glRotatef(angle,1,0.0,1);
-                makeTree(height,base);
-            glPopMatrix();
-        }else {
-            glColor3f(0.0,1.0/a,0.0);
-            glutSolidSphere(.2,10,10);
-        }
-    }
-    */
-
-    ///que empiece desde abajo
+    ///start from the bottom of the screen
     glTranslatef(0.0, -5, 0.0);
 
     for(int i = 0; i < axiom.length(); i++){
         char c = axiom[i];
 
+        ///Turtle
         if(c == 'F'){
-
-            ///hojitas deben aparecer bajo una condicion
-            //glColor3f(0.0,1.0,0.0);
-            //glutSolidSphere(base,10,10);
-
             makeCylinder(len, base); glTranslatef(0.0, len, 0.0);
-
         }else if(c == '+'){
-            glRotatef(angle,1,0.0,1);
+            glRotatef(angle,1,yRotation,1);
         }else if(c == '-'){
-            glRotatef(-angle,1,0.0,1);
+            glRotatef(-angle,1,-yRotation,1);
         }else if(c == '['){
             glPushMatrix();
         }else if(c == ']'){
+            glColor3f(1.0,0,1.0);
+            glutSolidSphere(0.1,10,10); //draws leaf
             glPopMatrix();
         }
     }
 
 }
+
 void init(void){
     ///background color
     glClearColor(0.0,0.0,0.0,0.0);
-
     glShadeModel(GL_SMOOTH);
     glEnable(GL_DEPTH_TEST);
     makeaTree = glGenLists(1);
@@ -108,59 +118,34 @@ void init(void){
     glEndList();
 }
 
-void nextGen(){
-    nxt = "";
-    for(int i = 0; i < axiom.length(); i++){
-        char c = axiom[i];
-        if(c == 'F'){
-            nxt += rule;
-        }else if(c == 'X'){
-            nxt += rule2;
-        }
-        else{
-            nxt += c;
-        }
-    }
-
-    ///por definir bien
-    len = len*.67; base -= base*0.3;
-    axiom = nxt;
-    cout << "generation " << generation_count << ": "<<nxt << endl;
-    generation_count++;
-}
-
 void keyboard(unsigned char key, int x, int y){
     switch (key){
-        case 'x':
-            x +=10;
-            glutPostRedisplay();
-            break;
-        case 'y':
-            y +=10;
-            glutPostRedisplay();
-            break;
-        case 'z':
-            z+=10;
-            glutPostRedisplay();
-            break;
         case '+':
             nextGen();
             init();
             glutPostRedisplay();
             break;
+        case 27:
+            exit(0);
+            break;
     }
 }
+
+float a = 0.0, delta = 0.1;
 
 void display(){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPushMatrix();
         glRotatef(x,1.0,0.0,0.0);
-        glRotatef(y,0.0,1.0,0.0);
+        glRotatef(a,0.0,1.0,0.0);
         glRotatef(z,0.0,0.0,1.0);
         glCallList(makeaTree);
     glPopMatrix();
     glutSwapBuffers();
+
+    a += delta;
 }
+
 void reshape(int w, int h){
     glViewport (0, 0, (GLsizei) w, (GLsizei) h);
     glMatrixMode(GL_PROJECTION);
@@ -170,6 +155,7 @@ void reshape(int w, int h){
     glLoadIdentity();
     glTranslatef(0.0,-8.0,-50.0);
 }
+
 int main(int argc, char **argv){
 
     glutInit(&argc, argv);
@@ -180,6 +166,7 @@ int main(int argc, char **argv){
     glutReshapeFunc(reshape);
     glutKeyboardFunc(keyboard);
     glutDisplayFunc(display);
-    glutMainLoop();
+    glutIdleFunc(display);
 
+    glutMainLoop();
 }
