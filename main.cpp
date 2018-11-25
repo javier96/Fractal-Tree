@@ -4,66 +4,61 @@
 #include <math.h>
 #include <time.h>
 #include <iostream>
+#include <vector>
 #include <string.h>
+#include <fstream>
 using namespace std;
 #include <GL/glut.h>
 const double PI = acos(-1);
 
+#define debug(s) cout<< #s <<" = "<< s <<endl
+
 GLuint makeaTree;
 float x,y,z;
-
-/*
-Fuzzy Weed
-Axiom	X
-F -->	FF
-X -->	F-[[X]+X]+F[+FX]-X
-ø = 22.5
-Limit  = 7
-base = 0.35
-
-Wavy Seaweed
-Axiom =	F
-F -->	FF+[+F-F-F]-[-F+F+F]
-ø =	22.5
-Limit = 5
-base = 0.2
-
-Arrow weed
-Axiom = X
-F --> FF
-X --> F[+X][-X]FX
-ø =	30
-base = 0.35
-*/
-
-///L-System variables
-string axiom = "F++F++F";
-string nxt;
-int generation_count = 0;
-float len = 2, base = 0.20; //generation 0 values
-float angle = 60;
-string rule1 = "F-F++F-F"; //F -> rule1
-string rule2 = "F-[[X]+X]+F[+FX]-X"; // X -> rule2
 float yRotation = 0;
 
-void nextGen(){
-    nxt = "";
+struct System{
+    string axiom;
+    string nxt;
+    int generation_count = 0;
+    float len, base, angle;
+    int limit; //limited number of generations
+    int numRules;
+    vector<pair<char, string> > rules; //<predecessor, succesor>
+    float translateDown;
 
-    for(char c : axiom){
-        if(c == 'F'){       ///rule 1
-            nxt += rule1;
-        }else if(c == 'X'){ ///rule 2
-            nxt += rule2;
-        }else{
-            nxt += c;
+    ///Maintain original copies
+    string axiom_aux;
+    float len_aux, base_aux, angle_aux;
+};
+
+System systems[4];
+int numSystems;
+int curSystem;
+
+void nextGen(){
+    systems[curSystem].nxt = "";
+
+    for(char c : systems[curSystem].axiom){
+        bool found = false;
+
+        for(int i = 0; i < systems[curSystem].numRules; i++){
+            if(c == systems[curSystem].rules[i].first){
+                found = true;
+                systems[curSystem].nxt += systems[curSystem].rules[i].second;
+            }
+        }
+
+        if(!found){
+            systems[curSystem].nxt += c;
         }
     }
 
     ///decrease branch attributes
-    len = len*.67; base -= base*0.3;
-    axiom = nxt;
-    cout << "generation " << ++generation_count << ": "<< axiom.length() << " in length"<<endl;
-    if(generation_count < 3) cout << axiom << endl;
+    systems[curSystem].len = systems[curSystem].len*.67;
+    systems[curSystem].base -= systems[curSystem].base*0.3;
+    systems[curSystem].axiom = systems[curSystem].nxt;
+
 }
 
 ///draws branch
@@ -81,13 +76,13 @@ void makeCylinder(float height, float base){
     glutSwapBuffers();
 }
 
-void makeTree(float len, float base){ //height = len, base = thickness
+void makeTree(float len, float base, float angle){
 
     ///start from the bottom of the screen
-    glTranslatef(0.0, -5, 0.0);
+    glTranslatef(0.0, systems[curSystem].translateDown, 0.0);
 
-    for(int i = 0; i < axiom.length(); i++){
-        char c = axiom[i];
+    for(int i = 0; i < systems[curSystem].axiom.length(); i++){
+        char c = systems[curSystem].axiom[i];
 
         ///Turtle
         if(c == 'F'){
@@ -114,14 +109,48 @@ void init(void){
     glEnable(GL_DEPTH_TEST);
     makeaTree = glGenLists(1);
     glNewList(makeaTree, GL_COMPILE);
-    makeTree(len,base);
+    makeTree(systems[curSystem].len, systems[curSystem].base, systems[curSystem].angle);
     glEndList();
+}
+
+void initSystem(int system){
+    curSystem = system;
+    systems[curSystem].axiom = systems[curSystem].axiom_aux;
+    systems[curSystem].len = systems[curSystem].len_aux;
+    systems[curSystem].base = systems[curSystem].base_aux;
+    systems[curSystem].angle = systems[curSystem].angle_aux;
+    systems[curSystem].generation_count = 0;
 }
 
 void keyboard(unsigned char key, int x, int y){
     switch (key){
         case '+':
             nextGen();
+            init();
+            glutPostRedisplay();
+            break;
+        case '1':
+            initSystem(0); //draw fuzzy weed
+            init();
+            glutPostRedisplay();
+            break;
+        case '2':
+            initSystem(1); //draw wavy seaweed
+            init();
+            glutPostRedisplay();
+            break;
+        case '3':
+            initSystem(2); //draw arrow weed
+            init();
+            glutPostRedisplay();
+            break;
+        case 'a':
+            systems[curSystem].angle += 1;
+            init();
+            glutPostRedisplay();
+            break;
+        case 'b':
+            systems[curSystem].angle -= 1;
             init();
             glutPostRedisplay();
             break;
@@ -156,11 +185,63 @@ void reshape(int w, int h){
     glTranslatef(0.0,-8.0,-50.0);
 }
 
+
+/*
+Formato de input
+
+numSystems
+
+<numSystems>
+    numRules
+    <numRules>
+        predecessor succesor
+    axiom
+    len
+    base
+    angle
+    limit
+    translateDown
+*/
+void loadLSystems(){
+    ifstream cin("L-Systems.txt");
+
+    cin >> numSystems;
+
+    char predecessor;
+    string successor;
+
+    for(int i = 0; i < numSystems; i++){
+        System sys;
+        cin >> sys.numRules;
+
+        for(int j = 0; j < sys.numRules; j++){
+            cin >> predecessor >> successor;
+            sys.rules.push_back({predecessor, successor});
+        }
+
+        cin >> sys.axiom >> sys.len >> sys.base >> sys.angle >> sys.limit >> sys.translateDown;
+
+        sys.axiom_aux = sys.axiom;
+        sys.len_aux = sys.len;
+        sys.base_aux = sys.base;
+        sys.angle_aux = sys.angle;
+
+        systems[i] = sys;
+    }
+
+    ///init a system
+    initSystem(0);
+
+}
+
 int main(int argc, char **argv){
+
+    //load L-Systems
+    loadLSystems();
 
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    glutInitWindowSize (1200, 800); glutInitWindowPosition(0,0);
+    glutInitWindowSize (1000, 1000); glutInitWindowPosition(0,0);
     glutCreateWindow("3D Tree L-System");
     init();
     glutReshapeFunc(reshape);
