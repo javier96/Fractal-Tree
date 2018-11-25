@@ -35,6 +35,81 @@ struct System{
 System systems[4];
 int numSystems;
 int curSystem;
+vector<vector<float>> vertices;
+vector<vector<int>> faces;
+int vertices_count = 0;
+
+void create_vertex(float x, float y, float z) {
+  float mv[16];
+  glGetFloatv(GL_MODELVIEW_MATRIX, mv);
+  for(int i = 0; i < 16; i++) {
+      cout << mv[i] << " ";
+      if(i%4==0) cout << '\n';
+  }
+  cout << "-----------------------------\n";
+  float xp = mv[0] * x + mv[4] * y + mv[8] * z + mv[12];
+  float yp = mv[1] * x + mv[5] * y + mv[9] * z + mv[13];
+  float zp = mv[2] * x + mv[6] * y + mv[10] * z + mv[14];
+  float wp = mv[3] * x + mv[7] * y + mv[11] * z + mv[15];
+  xp /= wp;
+  yp /= wp;
+  zp /= wp;
+   glVertex3f(x, y, z);
+  // glVertex3f(xp, yp, zp);
+  vertices.push_back({mv[12], mv[13], mv[14]});
+}
+
+void make_face() {
+  vector<int> face_vertices;
+  for(int i = vertices_count; i < vertices.size(); i++) {
+    face_vertices.push_back(i);
+  }
+  faces.push_back(face_vertices);
+  vertices_count = vertices.size();
+}
+
+void draw_cylinder(GLfloat radius,
+                   GLfloat height)
+{
+    GLfloat x              = 0.0;
+    GLfloat y              = 0.0;
+    GLfloat angle          = 0.0;
+    GLfloat angle_stepsize = 0.1;
+
+    /** Draw the tube */
+    glColor3f(0.64f, 1.16, 0.16f);
+    glBegin(GL_QUAD_STRIP);
+    angle = 0.0;
+    bool face = false;
+        while( angle < 2*PI ) {
+            x = radius * cos(angle);
+            y = radius * sin(angle);
+            create_vertex(x, y , height);
+            create_vertex(x, y , 0.0);
+            if(face) {
+              make_face();
+            }
+            angle = angle + angle_stepsize;
+            face = !face;
+        }
+        create_vertex(radius, 0.0, height);
+        create_vertex(radius, 0.0, 0.0);
+        make_face();
+    glEnd();
+
+    /** Draw the circle on top of cylinder */
+    glBegin(GL_POLYGON);
+    angle = 0.0;
+        while( angle < 2*PI ) {
+            x = radius * cos(angle);
+            y = radius * sin(angle);
+            create_vertex(x, y , height);
+            angle = angle + angle_stepsize;
+        }
+        create_vertex(radius, 0.0, height);
+        make_face();
+    glEnd();
+}
 
 void nextGen(){
     systems[curSystem].nxt = "";
@@ -70,7 +145,7 @@ void makeCylinder(float height, float base){
 
     glPushMatrix();
         glRotatef(-90, 1.0,0.0,0.0);
-        gluCylinder(obj, base,base-(0.2*base), height, 20,20);
+        draw_cylinder(base, height);
     glPopMatrix();
 
     glutSwapBuffers();
@@ -98,8 +173,32 @@ void makeTree(float len, float base, float angle){
             glutSolidSphere(0.1,10,10); //draws leaf
             glPopMatrix();
         }
+        float mv[16];
+        glGetFloatv(GL_MODELVIEW_MATRIX, mv);
+        for(int i = 0; i < 16; i++) {
+            cout << mv[i] << " ";
+            if(i%4==0) cout << '\n';
+        }
+        cout << "-----------------------------\n";
     }
 
+    cout << "---OBJ---" << '\n';
+    ofstream file;
+    file.open("happy-tree.obj");
+    for(vector<float> vertix : vertices) {
+      file << "v " << vertix[0] << " " << vertix[1] << " " << vertix[2] << '\n';
+    }
+    for(vector<int> face : faces) {
+      file << "f";
+      for(int vertix : face) {
+        file <<" " << vertix + 1;
+      }
+      file << '\n';
+    }
+    vertices.clear();
+    faces.clear();
+    vertices_count = 0;
+    cout << "---OBJ---\n";
 }
 
 void init(void){
