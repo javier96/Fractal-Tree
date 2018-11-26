@@ -15,7 +15,7 @@ const double PI = acos(-1);
 
 GLuint makeaTree;
 float x,y,z;
-float yRotation = 0;
+float yRotation = 0.1; //0 para 2D, lo que sea para 3D
 
 struct System{
     string axiom;
