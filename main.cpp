@@ -16,6 +16,15 @@ const double PI = acos(-1);
 GLuint makeaTree;
 float x,y,z;
 float yRotation = 0;
+float cam_angle = 0.0f;
+float lx = 0.0f;
+float lz = -1.0f;
+float cx = 0.0f;
+float cz = 4.0f;
+float rot_a = 0.0f;
+int slices = 3;
+float amp = 0.0f;
+
 
 struct System{
     string axiom;
@@ -70,7 +79,7 @@ void makeCylinder(float height, float base){
 
     glPushMatrix();
         glRotatef(-90, 1.0,0.0,0.0);
-        gluCylinder(obj, base,base-(0.2*base), height, 20,20);
+        gluCylinder(obj, base,base-(0.2*base), height, slices, slices);
     glPopMatrix();
 
     glutSwapBuffers();
@@ -83,13 +92,18 @@ void makeTree(float len, float base, float angle){
 
     for(int i = 0; i < systems[curSystem].axiom.length(); i++){
         char c = systems[curSystem].axiom[i];
-
+        float angle_rand = (float)rand()/RAND_MAX * amp;
+        if(rand()%2==0){
+          angle_rand *= -1;
+        }
         ///Turtle
         if(c == 'F'){
             makeCylinder(len, base); glTranslatef(0.0, len, 0.0);
         }else if(c == '+'){
+            glRotatef(angle_rand, 1, 0, 0);
             glRotatef(angle,1,yRotation,1);
         }else if(c == '-'){
+            glRotatef(angle_rand, 1, 0, 0);
             glRotatef(-angle,1,-yRotation,1);
         }else if(c == '['){
             glPushMatrix();
@@ -114,6 +128,9 @@ void init(void){
 }
 
 void initSystem(int system){
+    //Reset curSystem's variables
+    systems[curSystem].angle = systems[curSystem].angle_aux;
+
     curSystem = system;
     systems[curSystem].axiom = systems[curSystem].axiom_aux;
     systems[curSystem].len = systems[curSystem].len_aux;
@@ -154,24 +171,80 @@ void keyboard(unsigned char key, int x, int y){
             init();
             glutPostRedisplay();
             break;
+        case 'r': //rotate in +y
+            rot_a += 1.0f;
+            break;
+        case 'e': //rotate in -y
+            rot_a -=1.0f;
+            break;
+        case 'n': //add one slice to cylinders
+            slices++;
+            init();
+            glutPostRedisplay();
+            break;
+        case 'm': //remove one slice from cylinders
+            slices--;
+            init();
+            glutPostRedisplay();
+            break;
+        case 'z':
+            amp+= 2.0f;
+            init();
+            glutPostRedisplay();
+            break;
+        case 'x':
+            amp-= 2.0f;
+            init();
+            glutPostRedisplay();
+            break;
         case 27:
             exit(0);
             break;
     }
 }
 
+void processSpecialKeys(int key, int xx, int yy) {
+
+	float fraction = 1.0f;
+
+	switch (key) {
+		case GLUT_KEY_LEFT :
+			cam_angle -= 0.05f;
+			lx = sin(cam_angle);
+			lz = -cos(cam_angle);
+			break;
+		case GLUT_KEY_RIGHT :
+			cam_angle += 0.05f;
+			lx = sin(cam_angle);
+			lz = -cos(cam_angle);
+			break;
+		case GLUT_KEY_UP :
+			cx += lx * fraction;
+			cz += lz * fraction;
+			break;
+		case GLUT_KEY_DOWN :
+			cx -= lx * fraction;
+			cz -= lz * fraction;
+			break;
+	}
+}
+
 float a = 0.0, delta = 0.1;
 
 void display(){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    cout << cx << " " << cz << " " << lx << " " << lz << '\n';
+
     glPushMatrix();
-        glRotatef(x,1.0,0.0,0.0);
-        glRotatef(a,0.0,1.0,0.0);
-        glRotatef(z,0.0,0.0,1.0);
+      gluLookAt(	cx, 0.0f, cz,
+        cx+lx, 0.0f,  cz+lz,
+        0.0f, 1.0f,  0.0f);
+        //glRotatef(x,1.0,0.0,0.0);
+        glRotatef(rot_a,0.0,1.0,0.0);
+      //  glRotatef(z,0.0,0.0,1.0);
         glCallList(makeaTree);
     glPopMatrix();
     glutSwapBuffers();
-
     a += delta;
 }
 
@@ -182,7 +255,7 @@ void reshape(int w, int h){
     gluPerspective(30.0, (GLfloat) w/(GLfloat) h, 0.001, 1000.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    glTranslatef(0.0,-8.0,-50.0);
+    glTranslatef(0.0,-4.0,-50.0);
 }
 
 
@@ -248,6 +321,7 @@ int main(int argc, char **argv){
     glutKeyboardFunc(keyboard);
     glutDisplayFunc(display);
     glutIdleFunc(display);
+    glutSpecialFunc(processSpecialKeys);
 
     glutMainLoop();
 }
