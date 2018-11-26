@@ -118,9 +118,20 @@ void makeTree(float len, float base, float angle){
 
 void init(void){
     ///background color
-    glClearColor(0.0,0.0,0.0,0.0);
-    glShadeModel(GL_SMOOTH);
+    GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+   GLfloat mat_shininess[] = { 80.0 };
+   GLfloat light_position[] = { 2.0, 2.0, 2.0, 0.0 };
+   glClearColor (0.0, 0.0, 0.0, 0.0);
+   glShadeModel (GL_SMOOTH);
+
+   glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+   glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+   glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+   glEnable(GL_LIGHTING);
+   glEnable(GL_LIGHT0);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_COLOR_MATERIAL);
     makeaTree = glGenLists(1);
     glNewList(makeaTree, GL_COMPILE);
     makeTree(systems[curSystem].len, systems[curSystem].base, systems[curSystem].angle);
