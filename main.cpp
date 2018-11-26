@@ -15,7 +15,7 @@ const double PI = acos(-1);
 
 GLuint makeaTree;
 float x,y,z;
-float yRotation = 3;
+float yRotation = 0;
 float cam_angle = 0.0f;
 float lx = 0.0f;
 float lz = -1.0f;
@@ -172,10 +172,10 @@ void keyboard(unsigned char key, int x, int y){
             glutPostRedisplay();
             break;
         case 'r': //rotate in +y
-            rot_a += 0.3f;
+            rot_a += 1.0f;
             break;
         case 'e': //rotate in -y
-            rot_a -= 0.3f;
+            rot_a -=1.0f;
             break;
         case 'n': //add one slice to cylinders
             slices++;
@@ -205,16 +205,16 @@ void keyboard(unsigned char key, int x, int y){
 
 void processSpecialKeys(int key, int xx, int yy) {
 
-	float fraction = 0.1f;
+	float fraction = 1.0f;
 
 	switch (key) {
 		case GLUT_KEY_LEFT :
-			cam_angle -= 0.1f;
+			cam_angle -= 0.05f;
 			lx = sin(cam_angle);
 			lz = -cos(cam_angle);
 			break;
 		case GLUT_KEY_RIGHT :
-			cam_angle += 0.1f;
+			cam_angle += 0.05f;
 			lx = sin(cam_angle);
 			lz = -cos(cam_angle);
 			break;
