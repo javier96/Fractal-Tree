@@ -15,7 +15,7 @@ const double PI = acos(-1);
 
 GLuint makeaTree;
 float x,y,z;
-float yRotation = 0;
+float yRotation = 3;
 float cam_angle = 0.0f;
 float lx = 0.0f;
 float lz = -1.0f;
@@ -128,6 +128,9 @@ void init(void){
 }
 
 void initSystem(int system){
+    //Reset curSystem's variables
+    systems[curSystem].angle = systems[curSystem].angle_aux;
+
     curSystem = system;
     systems[curSystem].axiom = systems[curSystem].axiom_aux;
     systems[curSystem].len = systems[curSystem].len_aux;
