@@ -46,6 +46,7 @@ int numSystems;
 int curSystem;
 
 void nextGen(){
+    systems[curSystem].generation_count++;
     systems[curSystem].nxt = "";
 
     for(char c : systems[curSystem].axiom){
@@ -118,6 +119,12 @@ void makeTree(float len, float base, float angle){
 
 void init(void){
     ///background color
+    cout << "***********params***********";
+    cout << "\nMax x angle:\t" << amp;
+    cout << "\nAngle:\t\t" <<  systems[curSystem].angle;
+    cout << "\nResolution:\t" << slices;
+    cout << "\nIteration:\t" << systems[curSystem].generation_count;
+    cout << "\n***********params***********\n";
     GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
    GLfloat mat_shininess[] = { 80.0 };
    GLfloat light_position[] = { 2.0, 2.0, 2.0, 0.0 };
@@ -141,7 +148,10 @@ void init(void){
 void initSystem(int system){
     //Reset curSystem's variables
     systems[curSystem].angle = systems[curSystem].angle_aux;
-
+    cout << "Keys:\n1,2,3:\t\tChange tree type.\n+:\t\tRender tree's next iteration\n"
+      << "a/b:\t\tIncrease/decrease branch angle.\nz/x:\t\tIncrease/decrease x-angle\n"
+      << "arrow keys:\tCamera navigation.\ne/r:\t\tRotate tree clockwise & counter-clockwise\n"
+      << "n/m:\t\tAdd/remove resolution (slice and stacks)\n";
     curSystem = system;
     systems[curSystem].axiom = systems[curSystem].axiom_aux;
     systems[curSystem].len = systems[curSystem].len_aux;
