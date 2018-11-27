@@ -121,7 +121,7 @@ void init(void){
     cout << "\nAngle:\t\t" <<  systems[curSystem].angle;
     cout << "\nResolution:\t" << slices;
     cout << "\nIteration:\t" << systems[curSystem].generation_count;
-    cout << "\n***********params***********\n";
+    cout << "\n--------------------------\n";
     GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
    GLfloat mat_shininess[] = { 80.0 };
    GLfloat light_position[] = { 2.0, 2.0, 2.0, 0.0 };
@@ -145,10 +145,17 @@ void init(void){
 void initSystem(int system){
 
     cout << "Keys:\n1,2,3:\t\tChange tree type.\n+:\t\tRender tree's next iteration\n"
+      << "4:\t\tAccess saved session.\n"
       << "a/b:\t\tIncrease/decrease branch angle.\nz/x:\t\tIncrease/decrease x-angle\n"
       << "arrow keys:\tCamera navigation.\ne/r:\t\tRotate tree clockwise & counter-clockwise\n"
-      << "n/m:\t\tAdd/remove resolution (slice and stacks)\n";
+      << "n/m:\t\tAdd/remove resolution (slice and stacks)\n"
+      << "s:\t\tSave current session\n\n";
 
+      lx = 0.0f;
+      lz = -1.0f;
+      cx = 0.0f;
+      cz = 4.0f;
+      cam_angle = 0.0f;
     //Reset curSystem's variables
     systems[curSystem].angle = systems[curSystem].angle_aux;
     systems[curSystem].axiom = systems[curSystem].axiom_aux;
@@ -308,7 +315,7 @@ void display(){
 
     glPushMatrix();
       gluLookAt(	cx, 0.0f, cz,
-        cx+lx, 0.0f,  cz+lz,
+        cx+lx, 0.1f,  cz+lz,
         0.0f, 1.0f,  0.0f);
         //glRotatef(x,1.0,0.0,0.0);
         glRotatef(rot_a,0.0,1.0,0.0);
