@@ -24,6 +24,7 @@ float cz = 4.0f;
 float rot_a = 0.0f, delta = 0.05;
 int slices = 3;
 
+//Defines an L-System
 struct System{
     string axiom;
     string nxt;
@@ -42,6 +43,7 @@ System systems[4];
 int numSystems;
 int curSystem;
 
+// calculates next generation and prepares attributes for new rendering
 void nextGen(){
     systems[curSystem].generation_count++;
     systems[curSystem].nxt = "";
@@ -74,7 +76,6 @@ void makeCylinder(float height, float base){
     //glColor3f(0.64f, 0.16, 0.16f); //cafe
     glColor3f(0.64f, 1.16, 0.16f); //verde
     //glColor3f(1.0f, 1.0f, 1.0f); //blanco
-
     glPushMatrix();
         glRotatef(-90, 1.0,0.0,0.0);
         gluCylinder(obj, base,base-(0.2*base), height, slices, slices);
@@ -84,28 +85,28 @@ void makeCylinder(float height, float base){
 }
 
 void makeTree(float len, float base, float angle){
-
     ///start from the bottom of the screen
     glTranslatef(0.0, -5, 0.0);
 
+    //for every character in string
     for(int i = 0; i < systems[curSystem].axiom.length(); i++){
         char c = systems[curSystem].axiom[i];
         float angle_rand = (float)rand()/RAND_MAX * systems[curSystem].amp;
         if(rand()%2==0){
           angle_rand *= -1;
         }
-        ///Turtle
-        if(c == 'F'){
+        ///Turtle graphics
+        if(c == 'F'){ // draw and move forward
             makeCylinder(len, base); glTranslatef(0.0, len, 0.0);
-        }else if(c == '+'){
+        }else if(c == '+'){ //rotate +
             glRotatef(angle_rand, 1, 0, 0);
             glRotatef(angle,1,yRotation,1);
-        }else if(c == '-'){
+        }else if(c == '-'){ //rotate -
             glRotatef(angle_rand, 1, 0, 0);
             glRotatef(-angle,1,-yRotation,1);
-        }else if(c == '['){
+        }else if(c == '['){ //new state
             glPushMatrix();
-        }else if(c == ']'){
+        }else if(c == ']'){ //pop state
             glColor3f(1.0,0,1.0);
             glutSolidSphere(0.1,10,10); //draws leaf
             glPopMatrix();
@@ -114,24 +115,23 @@ void makeTree(float len, float base, float angle){
 
 }
 
+
 void init(void){
-    ///background color
     cout << "***********params***********";
     cout << "\nMax x angle:\t" << systems[curSystem].amp;
     cout << "\nAngle:\t\t" <<  systems[curSystem].angle;
     cout << "\nResolution:\t" << slices;
     cout << "\nIteration:\t" << systems[curSystem].generation_count;
     cout << "\n--------------------------\n";
-    GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+   //Lighting settings
+   GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
    GLfloat mat_shininess[] = { 80.0 };
    GLfloat light_position[] = { 2.0, 2.0, 2.0, 0.0 };
    glClearColor (0.0, 0.0, 0.0, 0.0);
    glShadeModel (GL_SMOOTH);
-
    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
     glEnable(GL_DEPTH_TEST);
@@ -142,20 +142,20 @@ void init(void){
     glEndList();
 }
 
+// Initiates a new system and resets parameters
 void initSystem(int system){
-
     cout << "Keys:\n1,2,3:\t\tChange tree type.\n+:\t\tRender tree's next iteration\n"
       << "4:\t\tAccess saved session.\n"
       << "a/b:\t\tIncrease/decrease branch angle.\nz/x:\t\tIncrease/decrease x-angle\n"
       << "arrow keys:\tCamera navigation.\ne/r:\t\tRotate tree clockwise & counter-clockwise\n"
       << "n/m:\t\tAdd/remove resolution (slice and stacks)\n"
       << "s:\t\tSave current session\n\n";
-
-      lx = 0.0f;
-      lz = -1.0f;
-      cx = 0.0f;
-      cz = 4.0f;
-      cam_angle = 0.0f;
+    // Reset camera
+    lx = 0.0f;
+    lz = -1.0f;
+    cx = 0.0f;
+    cz = 4.0f;
+    cam_angle = 0.0f;
     //Reset curSystem's variables
     systems[curSystem].angle = systems[curSystem].angle_aux;
     systems[curSystem].axiom = systems[curSystem].axiom_aux;
@@ -181,7 +181,7 @@ numSystems
     amp
 */
 
-
+// Saves the parameters of the current tree being visualized.
 void save(){
     systems[3] = systems[curSystem];
     systems[3].axiom_aux = systems[3].axiom;
@@ -210,10 +210,10 @@ void save(){
     }
 }
 
-
+// keyboard listener for UI
 void keyboard(unsigned char key, int x, int y){
     switch (key){
-        case '+':
+        case '+': //next system generation
             nextGen();
             init();
             glutPostRedisplay();
@@ -241,12 +241,12 @@ void keyboard(unsigned char key, int x, int y){
         case 's': //save in session
             save();
             break;
-        case 'a':
+        case 'a': //increment angle for system
             systems[curSystem].angle += 1;
             init();
             glutPostRedisplay();
             break;
-        case 'b':
+        case 'b'://decrement angle for system
             systems[curSystem].angle -= 1;
             init();
             glutPostRedisplay();
@@ -267,42 +267,43 @@ void keyboard(unsigned char key, int x, int y){
             init();
             glutPostRedisplay();
             break;
-        case 'z':
+        case 'z': //add 2 to the max_angle for rotations in x axis
             systems[curSystem].amp += 2.0f;
             init();
             glutPostRedisplay();
             break;
-        case 'x':
+        case 'x': //decrements 2 to the max_angle for rotations in x axis
             systems[curSystem].amp -= 2.0f;
             init();
             glutPostRedisplay();
             break;
-        case 27:
+        case 27: //exit
             exit(0);
             break;
     }
 }
 
+// keyboard listener for UI (Special keys)
 void processSpecialKeys(int key, int xx, int yy) {
 
 	float fraction = 1.0f;
 
 	switch (key) {
-		case GLUT_KEY_LEFT :
+		case GLUT_KEY_LEFT : // rotate in -y axis
 			cam_angle -= 0.05f;
 			lx = sin(cam_angle);
 			lz = -cos(cam_angle);
 			break;
-		case GLUT_KEY_RIGHT :
+		case GLUT_KEY_RIGHT : // rotate in +y axis
 			cam_angle += 0.05f;
 			lx = sin(cam_angle);
 			lz = -cos(cam_angle);
 			break;
-		case GLUT_KEY_UP :
+		case GLUT_KEY_UP : // move forward
 			cx += lx * fraction;
 			cz += lz * fraction;
 			break;
-		case GLUT_KEY_DOWN :
+		case GLUT_KEY_DOWN : // move backward
 			cx -= lx * fraction;
 			cz -= lz * fraction;
 			break;
@@ -311,15 +312,11 @@ void processSpecialKeys(int key, int xx, int yy) {
 
 void display(){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //cout << cx << " " << cz << " " << lx << " " << lz << '\n';
-
     glPushMatrix();
       gluLookAt(	cx, 0.0f, cz,
         cx+lx, 0.1f,  cz+lz,
         0.0f, 1.0f,  0.0f);
-        //glRotatef(x,1.0,0.0,0.0);
         glRotatef(rot_a,0.0,1.0,0.0);
-        //glRotatef(z,0.0,0.0,1.0);
         glCallList(makeaTree);
     glPopMatrix();
     glutSwapBuffers();
@@ -350,6 +347,8 @@ numSystems
     angle
     amp
 */
+
+// Loads an L-system from file.
 void loadLSystems(){
     ifstream cin("L-Systems.txt");
 
