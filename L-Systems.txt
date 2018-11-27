@@ -1,4 +1,4 @@
-3
+4
 
 2
 F FF
@@ -7,8 +7,7 @@ X
 1.5
 0.35
 22.5
-7
--5
+0
 
 1
 F FF+[+F-F-F]-[-F+F+F]
@@ -16,8 +15,7 @@ F
 1.5
 0.15
 22.5
-5
--5
+0
 
 2
 F FF
@@ -26,5 +24,14 @@ X
 1.5
 0.35
 30
-7
--5
+0
+
+2
+F FF
+X F-[[X]+X]+F[+FX]-X
+FFFF-[[FF-[[F-[[X]+X]+F[+FX]-X]+F-[[X]+X]+F[+FX]-X]+FF[+FFF-[[X]+X]+F[+FX]-X]-F-[[X]+X]+F[+FX]-X]+FF-[[F-[[X]+X]+F[+FX]-X]+F-[[X]+X]+F[+FX]-X]+FF[+FFF-[[X]+X]+F[+FX]-X]-F-[[X]+X]+F[+FX]-X]+FFFF[+FFFFFF-[[F-[[X]+X]+F[+FX]-X]+F-[[X]+X]+F[+FX]-X]+FF[+FFF-[[X]+X]+F[+FX]-X]-F-[[X]+X]+F[+FX]-X]-FF-[[F-[[X]+X]+F[+FX]-X]+F-[[X]+X]+F[+FX]-X]+FF[+FFF-[[X]+X]+F[+FX]-X]-F-[[X]+X]+F[+FX]-X
+0.451144
+0.12005
+67.5
+-20
+

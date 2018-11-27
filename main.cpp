@@ -23,22 +23,19 @@ float cx = 0.0f;
 float cz = 4.0f;
 float rot_a = 0.0f, delta = 0.05;
 int slices = 3;
-float amp = 0.0f;
-
 
 struct System{
     string axiom;
     string nxt;
     int generation_count = 0;
     float len, base, angle;
-    int limit; //limited number of generations
     int numRules;
     vector<pair<char, string> > rules; //<predecessor, succesor>
-    float translateDown;
+    float amp;
 
     ///Maintain original copies
     string axiom_aux;
-    float len_aux, base_aux, angle_aux;
+    float len_aux, base_aux, angle_aux, amp_aux;
 };
 
 System systems[4];
@@ -89,11 +86,11 @@ void makeCylinder(float height, float base){
 void makeTree(float len, float base, float angle){
 
     ///start from the bottom of the screen
-    glTranslatef(0.0, systems[curSystem].translateDown, 0.0);
+    glTranslatef(0.0, -5, 0.0);
 
     for(int i = 0; i < systems[curSystem].axiom.length(); i++){
         char c = systems[curSystem].axiom[i];
-        float angle_rand = (float)rand()/RAND_MAX * amp;
+        float angle_rand = (float)rand()/RAND_MAX * systems[curSystem].amp;
         if(rand()%2==0){
           angle_rand *= -1;
         }
@@ -120,7 +117,7 @@ void makeTree(float len, float base, float angle){
 void init(void){
     ///background color
     cout << "***********params***********";
-    cout << "\nMax x angle:\t" << amp;
+    cout << "\nMax x angle:\t" << systems[curSystem].amp;
     cout << "\nAngle:\t\t" <<  systems[curSystem].angle;
     cout << "\nResolution:\t" << slices;
     cout << "\nIteration:\t" << systems[curSystem].generation_count;
@@ -146,20 +143,65 @@ void init(void){
 }
 
 void initSystem(int system){
-    //Reset curSystem's variables
-    systems[curSystem].angle = systems[curSystem].angle_aux;
+
     cout << "Keys:\n1,2,3:\t\tChange tree type.\n+:\t\tRender tree's next iteration\n"
       << "a/b:\t\tIncrease/decrease branch angle.\nz/x:\t\tIncrease/decrease x-angle\n"
       << "arrow keys:\tCamera navigation.\ne/r:\t\tRotate tree clockwise & counter-clockwise\n"
       << "n/m:\t\tAdd/remove resolution (slice and stacks)\n";
-    curSystem = system;
+
+    //Reset curSystem's variables
+    systems[curSystem].angle = systems[curSystem].angle_aux;
     systems[curSystem].axiom = systems[curSystem].axiom_aux;
     systems[curSystem].len = systems[curSystem].len_aux;
     systems[curSystem].base = systems[curSystem].base_aux;
     systems[curSystem].angle = systems[curSystem].angle_aux;
+    systems[curSystem].amp = systems[curSystem].amp_aux;
     systems[curSystem].generation_count = 0;
+    curSystem = system;
 }
 
+/*
+Formato de input
+numSystems
+<numSystems>
+    numRules
+    <numRules>
+        predecessor succesor
+    axiom
+    len
+    base
+    angle
+    amp
+*/
+
+
+void save(){
+    systems[3] = systems[curSystem];
+    systems[3].axiom_aux = systems[3].axiom;
+    systems[3].len_aux = systems[3].len;
+    systems[3].base_aux = systems[3].base;
+    systems[3].angle_aux = systems[3].angle;
+    systems[3].amp_aux = systems[3].amp;
+
+    ofstream cout("L-Systems.txt");
+
+    cout << numSystems << endl << endl;
+
+    System sys;
+
+    for(int i = 0; i < numSystems; i++){
+        sys = systems[i];
+        cout << sys.numRules << endl;
+        for(int j = 0; j < sys.numRules; j++){
+            cout << sys.rules[j].first << " " << sys.rules[j].second<<endl;
+        }
+        cout << sys.axiom_aux << endl;
+        cout << sys.len_aux << endl;
+        cout << sys.base_aux << endl;
+        cout << sys.angle_aux << endl;
+        cout << sys.amp_aux << endl<<endl;
+    }
+}
 
 
 void keyboard(unsigned char key, int x, int y){
@@ -184,6 +226,14 @@ void keyboard(unsigned char key, int x, int y){
             init();
             glutPostRedisplay();
             break;
+        case '4':
+            initSystem(3); //draw session tree
+            init();
+            glutPostRedisplay();
+            break;
+        case 's': //save in session
+            save();
+            break;
         case 'a':
             systems[curSystem].angle += 1;
             init();
@@ -195,10 +245,10 @@ void keyboard(unsigned char key, int x, int y){
             glutPostRedisplay();
             break;
         case 'r': //rotate in +y
-            delta = 0.1f;
+            delta = 0.05f;
             break;
         case 'e': //rotate in -y
-            delta = -0.1f;
+            delta = -0.05f;
             break;
         case 'n': //add one slice to cylinders
             slices++;
@@ -211,12 +261,12 @@ void keyboard(unsigned char key, int x, int y){
             glutPostRedisplay();
             break;
         case 'z':
-            amp+= 2.0f;
+            systems[curSystem].amp += 2.0f;
             init();
             glutPostRedisplay();
             break;
         case 'x':
-            amp-= 2.0f;
+            systems[curSystem].amp -= 2.0f;
             init();
             glutPostRedisplay();
             break;
@@ -291,8 +341,7 @@ numSystems
     len
     base
     angle
-    limit
-    translateDown
+    amp
 */
 void loadLSystems(){
     ifstream cin("L-Systems.txt");
@@ -303,6 +352,7 @@ void loadLSystems(){
     string successor;
 
     for(int i = 0; i < numSystems; i++){
+
         System sys;
         cin >> sys.numRules;
 
@@ -311,7 +361,7 @@ void loadLSystems(){
             sys.rules.push_back({predecessor, successor});
         }
 
-        cin >> sys.axiom >> sys.len >> sys.base >> sys.angle >> sys.limit >> sys.translateDown;
+        cin >> sys.axiom >> sys.len >> sys.base >> sys.angle >> sys.amp;
 
         sys.axiom_aux = sys.axiom;
         sys.len_aux = sys.len;
